@@ -86,24 +86,22 @@ function (_, Backbone, jQuery, Session) {
         // done. Keep trying to focus until the element is actually focused,
         // and then stop trying.
         var autofocusEl = this.$('[autofocus]');
-        try {
-          autofocusEl.get(0).focus();
-        } catch (e) {
-          // IE can blow up if the element is not visible.
-        }
-        this.focusInterval = setInterval(function() {
+        var self = this;
+
+        var attemptFocus = function () {
           if (autofocusEl.is(':focus')) {
-            clearInterval(this.focusInterval);
-            this.focusInterval = null;
             return;
           }
-
           try {
             autofocusEl.get(0).focus();
           } catch (e) {
             // IE can blow up if the element is not visible.
           }
-        }, 50);
+
+          self.focusTimeout = setTimeout(attemptFocus, 50);
+        };
+
+        attemptFocus();
       }
     },
 
@@ -117,8 +115,8 @@ function (_, Backbone, jQuery, Session) {
         this.beforeDestroy();
       }
 
-      if (this.focusInterval) {
-        clearInterval(this.focusInterval);
+      if (this.focusTimeout) {
+        clearTimeout(this.focusTimeout);
       }
 
       if (remove) {
